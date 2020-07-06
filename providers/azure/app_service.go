@@ -143,43 +143,18 @@ func (g *AppServiceGenerator) listAndAddForAppServices() ([]terraformutils.Resou
 		slotResultIterator, err := AppsClient.ListSlotsComplete(ctx, id.ResourceGroup, appName)
 		for slotResultIterator.NotDone() {
 			slot := slotResultIterator.Value()
-			log.Println(slot)
+			resources = append(resources, terraformutils.NewSimpleResource(
+				*slot.ID,
+				*slot.Name,
+				"azurerm_app_service_slot",
+				"azurerm",
+				[]string{}))
+			if err := slotResultIterator.Next(); err != nil {
+				log.Println(err)
+				return nil, err
+			}
 		}
 	}
-
-	/*
-
-		accounts, err := DatabaseAccountsClient.List(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, account := range *accounts.Value {
-			resources = append(resources, terraformutils.NewSimpleResource(
-				*account.ID,
-				*account.Name,
-				"azurerm_cosmosdb_account",
-				g.ProviderName,
-				[]string{}))
-
-			id, err := ParseAzureResourceID(*account.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			tables, err := g.listTables(id.ResourceGroup, *account.Name)
-			if err != nil {
-				return nil, err
-			}
-			resources = append(resources, tables...)
-
-			sqlDatabases, sqlContainers, err := g.listSQLDatabasesAndContainersBehind(id.ResourceGroup, *account.Name)
-			if err != nil {
-				return nil, err
-			}
-			resources = append(resources, sqlDatabases...)
-			resources = append(resources, sqlContainers...)
-		}
-	*/
 
 	return resources, nil
 }
